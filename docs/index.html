@@ -5,8 +5,84 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>dark-evenings</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<p>dark-evenings: work in progress.</p>
+<main>
+  <h1>TODO title</h1>
+
+  <div id="map" aria-label="Map"></div>
+
+  <section id="inputs">
+    <fieldset>
+      <legend>TODO places</legend>
+      <label>Home
+        <input id="q-home" type="search" autocomplete="off" placeholder="Search a place">
+      </label>
+      <ul id="r-home" class="results"></ul>
+      <label>Work
+        <input id="q-work" type="search" autocomplete="off" placeholder="Search a place">
+      </label>
+      <ul id="r-work" class="results"></ul>
+      <div class="row">
+        <span>Tap map sets:</span>
+        <label><input type="radio" name="pin" value="home" checked> Home</label>
+        <label><input type="radio" name="pin" value="work"> Work</label>
+      </div>
+      <label class="row"><input id="remote" type="checkbox"> Remote</label>
+    </fieldset>
+
+    <fieldset>
+      <legend>TODO times</legend>
+      <div class="row">
+        <label>Start <input id="start" type="time" value="09:00"></label>
+        <label>Finish <input id="finish" type="time" value="17:30"></label>
+      </div>
+      <label>Mode
+        <select id="mode">
+          <option value="car">Car</option>
+          <option value="bike">Bike</option>
+          <option value="walk">Walk</option>
+        </select>
+      </label>
+      <label>Commute: <output id="commute-out">20</output> min
+        <input id="commute" type="range" min="0" max="120" step="1" value="20">
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>TODO clocks</legend>
+      <label class="row"><input type="radio" name="regime" value="current" checked> Current clocks <span id="n-current"></span></label>
+      <label class="row"><input type="radio" name="regime" value="summer"> Permanent summer <span id="n-summer"></span></label>
+      <label class="row"><input type="radio" name="regime" value="winter"> Permanent winter <span id="n-winter"></span></label>
+    </fieldset>
+  </section>
+
+  <section id="result">
+    <p><strong id="n-morning">–</strong> dark mornings</p>
+    <p><strong id="n-evening">–</strong> dark evenings</p>
+    <p id="tz-note"></p>
+    <canvas id="strip" aria-label="Year strip"></canvas>
+    <p class="legend">
+      <span class="sw" style="background:#1b1f4b"></span> dark
+      <span class="sw" style="background:#e08a2e"></span> twilight
+      <span class="sw" style="background:#f2d94e"></span> light
+    </p>
+  </section>
+
+  <footer>
+    <p>TODO privacy line</p>
+    <p>Map data © OpenStreetMap contributors (ODbL), tiles by OpenFreeMap; search by Photon (komoot); routing by Valhalla (FOSSGIS).</p>
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/tz-lookup@6.1.25/tz.js" integrity="sha384-hu4xDymJTssX8+i8qDUKexc5lIusgVeLPv72brg57d+WMdeCGtr3A1U8oW8PEtaP" crossorigin="anonymous"></script>
+<script src="js/sun.js"></script>
+<script src="js/regimes.js"></script>
+<script src="js/route.js"></script>
+<script src="js/strip.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

@@ -3,14 +3,18 @@
 Standing instructions for Claude Code. Read this at the start of every session.
 
 ## What this is
-A personal, funny data story about the clocks changing: "I hate leaving work in the dark, so I worked out what it costs me, and whether scrapping the clock change would save me." Story-led, Ireland first, ending in a personal tool (your town + your leaving time → your dark evenings, under three clock regimes) and a shareable "receipt".
+A simple, single-page tool: **how much of your commute happens in the dark?**
 
-- **Live URL:** https://ciaranbrennan.ie/dark-evenings/ (GitHub Pages from `main` / `/docs`; the domain comes from the portfolio repo)
-- **Concept, story and design docs:** `design/` (gitignored, local only). Start with `design/concept.md`.
-- **Target:** ship by mid-February 2027, ahead of the clocks going forward on 28 Mar 2027.
+- **Inputs:** home and work (Photon search or tap the map; a "Remote" switch skips work and commute), start and finish times (weekdays), commute mode (car/bike/walk) → time from Valhalla, shown on a slider that can override it (slider only if routing fails).
+- **Calculation:** each weekday for the next 12 months; morning trip = start − commute → start, evening trip = finish → finish + commute; NOAA sun maths at home; "dark" = sun more than 6° below the horizon at any point of the trip. Toggle: current clocks / permanent summer / permanent winter.
+- **Output:** two big numbers (dark mornings, dark evenings); a year strip with the commute windows marked dark/twilight/light; a globe that flies to the route.
+- **Defaults:** Cork → Cork city centre, 09:00–17:30, car, current clocks, so the page shows a real result on load.
+- **Privacy:** one line saying home and work go to Photon and Valhalla, nothing is stored, and pick a spot near home.
+- **Not in v1:** scroll story, receipt, accounts, saved state, public transport, multiple commutes. **Keep it small.**
+- **Live URL:** https://ciaranbrennan.ie/dark-evenings/ (GitHub Pages from `main` / `/docs`). **Target:** mid-February 2027.
 
 ## Division of labour
-The author owns product, story and every word of prose. Planning and prompts come from a separate claude.ai project. **Claude Code implements.** Don't write or rewrite user-facing prose beyond placeholders marked `TODO`.
+The author owns product, design decisions and every word of copy. Planning and prompts come from a separate claude.ai project. **Claude Code implements.** Don't write or rewrite user-facing prose beyond placeholders marked `TODO`.
 
 ## Process rules
 1. **Reflect first.** Before any edit: restate the task, list every file and function you'll change, and flag risks or ambiguities. Then **stop and wait for approval.**
@@ -27,16 +31,17 @@ The author owns product, story and every word of prose. Planning and prompts com
 - Height-only resizes (Safari's address bar) must **not** trigger rebuilds.
 
 ## Stack rules
-- **Plain HTML, CSS and JS. No frameworks, no build step, no npm runtime dependencies.**
-- **No CDN loads**, except the self-hosted Umami at `analytics.ciaranbrennan.ie`.
-- Canvas or inline SVG for graphics. No chart libraries.
-- Sun maths is computed in the browser (SunCalc-equivalent; vendor it or write it, don't hotlink). Clock rules come from `Intl` (IANA tzdb).
+- **Simple browser site: plain HTML, CSS and JS. No frameworks, no build step.**
+- **CDN libraries are allowed if version-pinned** (exact version + integrity hash), e.g. MapLibre GL JS for the globe/map.
+- **External services, called directly from the browser:** OpenFreeMap (map tiles), Photon (place search), Valhalla on the FOSSGIS server (commute routing). If routing fails or is throttled, fall back to the commute slider. Never let a failed service break the page.
+- Self-hosted Umami at `analytics.ciaranbrennan.ie`.
+- Sun maths computed in the browser using the **NOAA solar calculator method** (iterated at event time; matches sunrise-sunset.org to the second). Not SunCalc (about 3 min error at sunset). Clock rules come from `Intl` (IANA tzdb).
 - System fonts unless the design docs say otherwise.
 
 ## Data rules
 - Scripts that produce numbers live in `exploration/` (Python, stdlib preferred) and are committed and reproducible.
 - Published data lives in `docs/data/`. Every file records its source, licence and generation date.
-- Credits: GeoNames (CC BY 4.0); Tailte Éireann (CC BY 4.0); OSNI (UK OGL); OSM (ODbL) if used.
+- Credits: map data © OpenStreetMap contributors (ODbL), tiles by OpenFreeMap; search by Photon (komoot, OSM data); routing by Valhalla (FOSSGIS server, OSM data). Show these in the map attribution and the page footer.
 
 ## Repo layout
 ```
