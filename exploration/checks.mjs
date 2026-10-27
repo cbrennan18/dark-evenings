@@ -1,5 +1,6 @@
 // Acceptance checks for docs/js/sun.js and docs/js/regimes.js.
 // Run: node exploration/checks.mjs
+import fs from 'node:fs';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -56,6 +57,37 @@ const checks = [
 for (const [name, ok] of checks) {
   if (!ok) failed = true;
   console.log(`  ${name}: ${ok ? 'PASS' : 'FAIL'}`);
+}
+
+// 3. Hook shading: share of Ireland (grid points inside the outline) that is
+// lit / twilight (sun < -0.833) / night (sun < -6) at the two hook instants.
+// Informational: prints the split, asserts nothing.
+const hook = require(path.join(js, 'hook.js'));
+const ireland = JSON.parse(fs.readFileSync(path.join(js, '..', 'data', 'ireland.json'), 'utf8'));
+
+function inRing(lon, lat, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i], [xj, yj] = ring[j];
+    if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+console.log('\nHook shading over Ireland (grid 0.02 deg, points inside outline)');
+const [x0, y0, x1, y1] = ireland.bbox;
+const instants = [['Sat 24 Oct 18:00 IST (17:00 UTC)', hook.SAT], ['Sun 25 Oct 18:00 GMT (18:00 UTC)', hook.SUN]];
+for (const [name, t] of instants) {
+  const n = [0, 0, 0];
+  for (let lat = y0; lat <= y1; lat += 0.02) {
+    for (let lon = x0; lon <= x1; lon += 0.02) {
+      if (!ireland.polygons.some((r) => inRing(lon, lat, r))) continue;
+      n[hook.shadeClass(sun.altitude(t, lat, lon))]++;
+    }
+  }
+  const tot = n[0] + n[1] + n[2];
+  const pct = (v) => (100 * v / tot).toFixed(1).padStart(5) + '%';
+  console.log(`  ${name.padEnd(34)} lit ${pct(n[0])}  twilight ${pct(n[1])}  night ${pct(n[2])}  (${tot} points)`);
 }
 
 process.exit(failed ? 1 : 0);

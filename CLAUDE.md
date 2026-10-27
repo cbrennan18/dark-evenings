@@ -6,9 +6,9 @@ Standing instructions for Claude Code. Read this at the start of every session.
 A simple, single-page tool: **how much of your commute happens in the dark?**
 
 - **Inputs:** home and work (Photon search or tap the map; a "Remote" switch skips work and commute), start and finish times (weekdays), commute mode (car/bike/walk) → time from Valhalla, shown on a slider that can override it (slider only if routing fails).
-- **Calculation:** each weekday for the next 12 months; morning trip = start − commute → start, evening trip = finish → finish + commute; NOAA sun maths at home; "dark" = sun more than 6° below the horizon at any point of the trip. Toggle: current clocks / permanent summer / permanent winter.
+- **Calculation:** each weekday for the next 12 months; morning trip = start − commute → start, evening trip = finish → finish + commute; NOAA sun maths at home; "dark" = sun more than 6° below the horizon at any point of the trip. Toggle: current clocks / permanent summer time.
 - **Output:** two big numbers (dark mornings, dark evenings); a year strip with the commute windows marked dark/twilight/light; a globe that flies to the route.
-- **Defaults:** Cork → Cork city centre, 09:00–17:30, car, current clocks, so the page shows a real result on load.
+- **Defaults:** Entry starts empty (Home/Work placeholders). "See demo" fills Cork → Cork city centre, 09:00–17:30, car, and runs it.
 - **Privacy:** one line saying home and work go to Photon and Valhalla, nothing is stored, and pick a spot near home.
 - **Not in v1:** scroll story, receipt, accounts, saved state, public transport, multiple commutes. **Keep it small.**
 - **Live URL:** https://ciaranbrennan.ie/dark-evenings/ (GitHub Pages from `main` / `/docs`). **Target:** mid-February 2027.
@@ -36,7 +36,7 @@ The author owns product, design decisions and every word of copy. Planning and p
 - **External services, called directly from the browser:** OpenFreeMap (map tiles), Photon (place search), Valhalla on the FOSSGIS server (commute routing). If routing fails or is throttled, fall back to the commute slider. Never let a failed service break the page.
 - Self-hosted Umami at `analytics.ciaranbrennan.ie`.
 - Sun maths computed in the browser using the **NOAA solar calculator method** (iterated at event time; matches sunrise-sunset.org to the second). Not SunCalc (about 3 min error at sunset). Clock rules come from `Intl` (IANA tzdb).
-- System fonts unless the design docs say otherwise.
+- Inter (OFL), self-hosted in docs/fonts/. No font CDNs.
 
 ## Data rules
 - Scripts that produce numbers live in `exploration/` (Python, stdlib preferred) and are committed and reproducible.

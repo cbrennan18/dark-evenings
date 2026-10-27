@@ -4,85 +4,99 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
+<meta name="color-scheme" content="dark">
 <title>dark-evenings</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.css" integrity="sha384-uTttxo/aOKbdE5RlD/SPzSDoDmNvGlUYPjONi2MN/b7c9HPSvW07OIuyP7uL6jxK" crossorigin="anonymous">
+<link rel="preload" href="fonts/inter-latin-800-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<main>
-  <h1>TODO title</h1>
 
-  <div id="map" aria-label="Map"></div>
+<section id="hook">
+  <p class="hook-text">TODO hook text</p>
+  <canvas id="hook-canvas" role="img" aria-label="TODO hook canvas description"></canvas>
+  <button id="hook-replay" class="btn ghost" type="button">TODO replay</button>
+  <button id="hook-go" class="btn" type="button">Find out exactly how much you lose</button>
+</section>
 
-  <section id="inputs">
-    <fieldset>
-      <legend>TODO places</legend>
-      <label>Home
-        <input id="q-home" type="search" autocomplete="off" placeholder="Search a place">
-      </label>
+<section id="entry">
+  <h2>TODO entry heading</h2>
+  <div id="mount-entry">
+    <section id="inputs">
+      <input id="q-home" type="search" autocomplete="off" placeholder="TODO home placeholder" aria-label="Home">
       <ul id="r-home" class="results"></ul>
-      <label>Work
-        <input id="q-work" type="search" autocomplete="off" placeholder="Search a place">
-      </label>
+      <input id="q-work" type="search" autocomplete="off" placeholder="TODO work placeholder" aria-label="Work">
       <ul id="r-work" class="results"></ul>
-      <div class="row">
-        <span>Tap map sets:</span>
-        <label><input type="radio" name="pin" value="home" checked> Home</label>
-        <label><input type="radio" name="pin" value="work"> Work</label>
+
+      <div class="row" id="pin-row" hidden>
+        <span class="lbl">Tap map sets</span>
+        <div class="seg small" role="radiogroup" aria-label="Tap map sets">
+          <label><input type="radio" name="pin" value="home" checked><span>Home</span></label>
+          <label><input type="radio" name="pin" value="work"><span>Work</span></label>
+        </div>
       </div>
-      <label class="row"><input id="remote" type="checkbox"> Remote</label>
-    </fieldset>
 
-    <fieldset>
-      <legend>TODO times</legend>
       <div class="row">
-        <label>Start <input id="start" type="time" value="09:00"></label>
-        <label>Finish <input id="finish" type="time" value="17:30"></label>
+        <span class="lbl" id="remote-lbl">Remote</span>
+        <span class="switch">
+          <input id="remote" type="checkbox" role="switch" aria-labelledby="remote-lbl">
+          <i aria-hidden="true"></i>
+        </span>
       </div>
-      <label>Mode
-        <select id="mode">
-          <option value="car">Car</option>
-          <option value="bike">Bike</option>
-          <option value="walk">Walk</option>
-        </select>
-      </label>
-      <label>Commute: <output id="commute-out">20</output> min
-        <input id="commute" type="range" min="0" max="120" step="1" value="20">
-      </label>
-    </fieldset>
 
-    <fieldset>
-      <legend>TODO clocks</legend>
-      <label class="row"><input type="radio" name="regime" value="current" checked> Current clocks <span id="n-current"></span></label>
-      <label class="row"><input type="radio" name="regime" value="summer"> Permanent summer <span id="n-summer"></span></label>
-      <label class="row"><input type="radio" name="regime" value="winter"> Permanent winter <span id="n-winter"></span></label>
-    </fieldset>
-  </section>
+      <div class="row">
+        <label class="field"><span class="lbl">Start</span><input id="start" type="time" value="09:00"></label>
+        <label class="field"><span class="lbl">Finish</span><input id="finish" type="time" value="17:30"></label>
+      </div>
 
-  <section id="result">
-    <p><strong id="n-morning">–</strong> dark mornings</p>
-    <p><strong id="n-evening">–</strong> dark evenings</p>
-    <p id="tz-note"></p>
-    <canvas id="strip" aria-label="Year strip"></canvas>
-    <p class="legend">
-      <span class="sw" style="background:#1b1f4b"></span> dark
-      <span class="sw" style="background:#e08a2e"></span> twilight
-      <span class="sw" style="background:#f2d94e"></span> light
-    </p>
-  </section>
+      <div class="seg small" role="radiogroup" aria-label="Mode">
+        <label><input type="radio" name="mode" value="car" checked><span>Car</span></label>
+        <label><input type="radio" name="mode" value="bike"><span>Bike</span></label>
+        <label><input type="radio" name="mode" value="walk"><span>Walk</span></label>
+      </div>
 
-  <footer>
-    <p>TODO privacy line</p>
-    <p>Map data © OpenStreetMap contributors (ODbL), tiles by OpenFreeMap; search by Photon (komoot); routing by Valhalla (FOSSGIS).</p>
-  </footer>
-</main>
+      <div id="commute-wrap" hidden>
+        <label class="slider"><span class="lbl">Commute: <output id="commute-out">20</output> min</span>
+          <input id="commute" type="range" min="0" max="120" step="1" value="20">
+        </label>
+      </div>
+    </section>
+  </div>
+  <button id="find" class="btn" type="button" disabled>TODO find out</button>
+  <button id="demo" class="btn secondary" type="button">TODO see demo</button>
+</section>
 
-<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5.24.0/dist/maplibre-gl.js" integrity="sha384-5+cfbwT0iiub6VsQAdn6yz16nr6sDiQoHx6tm4O8OVYXHYOxcffFmCJBL0dgdvGp" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/tz-lookup@6.1.25/tz.js" integrity="sha384-hu4xDymJTssX8+i8qDUKexc5lIusgVeLPv72brg57d+WMdeCGtr3A1U8oW8PEtaP" crossorigin="anonymous"></script>
-<script src="js/sun.js"></script>
-<script src="js/regimes.js"></script>
-<script src="js/route.js"></script>
-<script src="js/strip.js"></script>
-<script src="js/app.js"></script>
+<section id="result" hidden>
+  <header class="hero">
+    <div id="map" aria-label="Map"></div>
+    <h1>TODO title</h1>
+    <div class="nums">
+      <p class="num"><strong id="n-morning">–</strong><span>dark mornings</span></p>
+      <p class="num evening"><strong id="n-evening">–</strong><span>dark evenings</span></p>
+    </div>
+  </header>
+
+  <div class="col">
+    <div class="seg" role="radiogroup" aria-label="TODO clocks">
+      <label><input type="radio" name="regime" value="current" checked><span>Now</span></label>
+      <label><input type="radio" name="regime" value="summer"><span>Summer all year</span></label>
+    </div>
+
+    <canvas id="strip" role="img" aria-label="Year strip"></canvas>
+
+    <div id="mount-result"></div>
+  </div>
+</section>
+
+<footer>
+  <p>TODO privacy line</p>
+  <p>Map data © OpenStreetMap contributors (ODbL), tiles by OpenFreeMap; search by Photon (komoot); routing by Valhalla (FOSSGIS). Outline: Natural Earth (public domain). Type: Inter (SIL OFL 1.1).</p>
+</footer>
+
+<script defer src="js/sun.js"></script>
+<script defer src="js/hook.js"></script>
+<script defer src="js/regimes.js"></script>
+<script defer src="js/route.js"></script>
+<script defer src="js/strip.js"></script>
+<script defer src="js/app.js"></script>
 </body>
 </html>

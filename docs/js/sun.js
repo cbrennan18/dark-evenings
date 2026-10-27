@@ -37,7 +37,11 @@
 
   // Solar elevation in degrees at a UTC instant.
   function altitude(tMs, lat, lon) {
-    var p = solarPos(tMs);
+    return altitudeAt(solarPos(tMs), tMs, lat, lon);
+  }
+
+  // Same, with solarPos(tMs) already computed (for many places at one instant).
+  function altitudeAt(p, tMs, lat, lon) {
     var utcMin = mod(tMs, 86400000) / 60000;
     var tst = mod(utcMin + p.eqTime + 4 * lon, 1440);
     var ha = tst / 4 - 180;
@@ -66,6 +70,7 @@
   var api = {
     solarPos: solarPos,
     altitude: altitude,
+    altitudeAt: altitudeAt,
     eventTime: eventTime,
     sunrise: function (d, lat, lon) { return eventTime(d, lat, lon, 90.833, true); },
     sunset: function (d, lat, lon) { return eventTime(d, lat, lon, 90.833, false); },
