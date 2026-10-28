@@ -1,4 +1,4 @@
-// Wiring: hook, entry, lazy libraries, map, inputs, routing, counts, strip.
+// Wiring: hook, entry, lazy libraries, map, inputs, routing, counts, sky calendar.
 (function () {
   var DE = window.DE;
   var $ = function (id) { return document.getElementById(id); };
@@ -74,7 +74,7 @@
     return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
   }
 
-  // ---- counts + strip ----
+  // ---- counts + calendar ----
   function inputs() {
     var w = window12();
     return {
@@ -86,14 +86,52 @@
     };
   }
 
-  var lastStripWidth = 0;
-  function recompute() {
+  function clock(min) {
+    var m = ((Math.round(min) % 1440) + 1440) % 1440;
+    return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  }
+
+  // One line under the map. Keeps the last full line while a place is unset.
+  function updateSummary() {
+    if (!state.home) return;
+    var line;
+    if (state.remote) line = state.home.label + ' · Remote';
+    else if (state.work) {
+      var mode = document.querySelector('input[name="mode"]:checked + span');
+      line = state.home.label + ' → ' + state.work.label + ' · ' + $('start').value + '–' + $('finish').value +
+        ' · ' + (mode ? mode.textContent : state.mode) + ' ' + state.commute + ' min';
+    }
+    if (line) $('summary').textContent = line;
+  }
+
+  var lastSkyWidth = 0;
+  var recomputeRaf = 0;
+  function recompute() { // coalesced: a slider drag fires many events per frame
+    if (recomputeRaf) return;
+    recomputeRaf = requestAnimationFrame(function () { recomputeRaf = 0; recomputeNow(); });
+  }
+  function recomputeNow() {
     if (!ready || !state.home) return; // before Find out (or home unset) nothing is recomputed
-    lastStripWidth = $('strip').clientWidth;
-    DE.strip.update(inputs(), state.regime);
-    var c = DE.strip.counts(state.regime);
+    var o = inputs();
+    lastSkyWidth = $('sky').clientWidth;
+    DE.sky.update(o, state.regime);
+    var c = DE.sky.counts(state.regime);
     $('n-morning').textContent = c.mornings;
     $('n-evening').textContent = c.evenings;
+    $('key-m').textContent = clock(o.startMin - o.commuteMin);
+    $('key-e').textContent = clock(o.finishMin + o.commuteMin);
+    $('sky').setAttribute('aria-label', 'TODO calendar: ' + c.mornings + ' dark mornings, ' + c.evenings + ' dark evenings');
+    updateSummary();
+  }
+
+  // ---- edit in place ----
+  function editOpen() { return $('edit-panel').classList.contains('open'); }
+  function setEdit(open) {
+    var p = $('edit-panel'), b = $('edit-toggle');
+    p.classList.toggle('open', open);
+    if (open) p.removeAttribute('inert'); else p.setAttribute('inert', '');
+    b.setAttribute('aria-expanded', open ? 'true' : 'false');
+    b.textContent = open ? 'TODO done' : 'TODO edit';
   }
 
   // ---- map ----
@@ -165,6 +203,7 @@
       fitPins();
     });
     map.on('click', function (e) {
+      if (!editOpen()) return; // taps set places only while editing
       var which = document.querySelector('input[name="pin"]:checked').value;
       setPlace(which, { lat: e.lngLat.lat, lon: e.lngLat.lng, label: e.lngLat.lat.toFixed(4) + ', ' + e.lngLat.lng.toFixed(4) });
     });
@@ -256,9 +295,8 @@
     var first = result.hidden;
     if (first) {
       result.hidden = false;
-      $('mount-result').appendChild($('inputs')); // one inputs block, now under the strip
-      $('find').textContent = 'TODO back to result';
-      $('demo').hidden = true;
+      $('mount-edit').appendChild($('inputs')); // one inputs block, now in the edit panel
+      $('entry').hidden = true; // first-use only; its top is where the result's top lands
     }
     scrollTo(result);
     // Wait for the route too, so the first numbers use the real commute.
@@ -294,42 +332,45 @@
       recompute();
     });
     Array.prototype.forEach.call(document.querySelectorAll('input[name="mode"]'), function (el) {
-      el.addEventListener('change', function () { state.mode = this.value; refreshRoute(); });
+      el.addEventListener('change', function () { state.mode = this.value; updateSummary(); refreshRoute(); });
     });
     $('commute').addEventListener('input', function () {
       state.commute = +this.value;
       $('commute-out').textContent = state.commute;
       recompute();
     });
-    $('start').addEventListener('change', recompute);
-    $('finish').addEventListener('change', recompute);
+    ['start', 'finish'].forEach(function (id) {
+      $(id).addEventListener('input', recompute);
+      $(id).addEventListener('change', recompute);
+    });
+    $('edit-toggle').addEventListener('click', function () { setEdit(!editOpen()); });
     Array.prototype.forEach.call(document.querySelectorAll('input[name="regime"]'), function (el) {
       el.addEventListener('change', function () { state.regime = this.value; recompute(); });
     });
-    $('hook-go').addEventListener('click', function () { scrollTo($('entry')); });
+    $('hook-go').addEventListener('click', function () { scrollTo($('entry').hidden ? $('result') : $('entry')); });
     $('find').addEventListener('click', findOut);
     $('demo').addEventListener('click', fillDemo);
     $('hook-replay').addEventListener('click', function () { DE.hook.replay(); });
 
     // Redraw only when a canvas box really changes size. Safari's address bar
     // changes the viewport height, but the hook is sized in svh, so neither it
-    // nor the strip changes size and nothing rebuilds.
+    // nor the calendar changes size and nothing rebuilds.
     var lastHook = DE.hook.size();
     window.addEventListener('resize', function () {
       var h = DE.hook.size();
       if (h !== lastHook) { lastHook = h; DE.hook.redraw(); }
-      var w = $('strip').clientWidth;
-      if (w && w !== lastStripWidth) { lastStripWidth = w; DE.strip.redraw(); }
+      var w = $('sky').clientWidth;
+      if (w && w !== lastSkyWidth) { lastSkyWidth = w; DE.sky.redraw(); }
     });
     // Canvas text needs Inter; redraw once it has loaded.
     if (document.fonts && document.fonts.load) {
       Promise.all([document.fonts.load('500 14px Inter'), document.fonts.load('400 14px Inter')])
-        .then(function () { DE.strip.redraw(); }, function () { /* system font stays */ });
+        .then(function () { DE.sky.redraw(); }, function () { /* system font stays */ });
     }
   }
 
   $('commute-out').textContent = state.commute;
-  DE.strip.init($('strip'));
+  DE.sky.init($('sky'));
   DE.hook.init($('hook-canvas'));
   wire();
   updateFind();

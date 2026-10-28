@@ -1,4 +1,4 @@
-// Acceptance checks for docs/js/sun.js and docs/js/regimes.js.
+// Acceptance checks for docs/js/sun.js, regimes.js and sky.js.
 // Run: node exploration/checks.mjs
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
@@ -9,6 +9,7 @@ const require = createRequire(import.meta.url);
 const js = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'docs', 'js');
 const sun = require(path.join(js, 'sun.js'));
 const regimes = require(path.join(js, 'regimes.js'));
+const sky = require(path.join(js, 'sky.js'));
 
 const CORK = { lat: 51.897968, lon: -8.47061, tz: 'Europe/Dublin' };
 let failed = false;
@@ -57,6 +58,22 @@ const checks = [
 for (const [name, ok] of checks) {
   if (!ok) failed = true;
   console.log(`  ${name}: ${ok ? 'PASS' : 'FAIL'}`);
+}
+
+// 2b. Sky calendar: cells below -6 deg (altitude at departure / arrival) must
+// equal countDark's mornings / evenings, both regimes, Cork 09:00-17:30.
+console.log('\nSky calendar cells below -6 deg vs countDark, Cork, 09:00-17:30');
+for (const commuteMin of [0, 20]) {
+  for (const regime of ['current', 'summer']) {
+    const o = { ...CORK, startMin: 540, finishMin: 1050, commuteMin, from: '2026-10-26', to: '2027-10-25' };
+    const t0 = performance.now();
+    const c = sky.cells(o, regime);
+    const ms = performance.now() - t0;
+    const d = regimes.countDark({ ...o, regime });
+    const ok = c.mornings === d.mornings && c.evenings === d.evenings && c.ms.length === d.days.length;
+    if (!ok) failed = true;
+    console.log(`  commute ${String(commuteMin).padStart(2)} ${regime.padEnd(8)} cells m ${c.mornings} e ${c.evenings}  countDark m ${d.mornings} e ${d.evenings}  cells ${c.ms.length}  ${ms.toFixed(0)} ms  ${ok ? 'PASS' : 'FAIL'}`);
+  }
 }
 
 // 3. Hook shading: share of Ireland (grid points inside the outline) that is

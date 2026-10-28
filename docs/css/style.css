@@ -12,7 +12,6 @@
   --twilight: #463f36;
   --day: #d9ccb4;
   --rule: #363636;
-  --bar: #4e4a43;
   --map: #1c1c1c;
   --gutter: 16px;
 }
@@ -53,7 +52,22 @@ body {
 .seg.small { width: auto; }
 .row .seg.small { min-width: 168px; }
 
-#strip { display: block; width: 100%; height: 260px; margin-top: 14px; }
+#sky { display: block; width: 100%; margin-top: 8px; }
+#sky-key { margin: 16px 0 0; font-size: 14px; color: var(--muted); }
+.tri { display: inline-block; width: 10px; height: 10px; background: var(--ink); vertical-align: -1px; }
+.tri.tl { clip-path: polygon(0 0, 100% 0, 0 100%); }
+.tri.br { clip-path: polygon(100% 0, 100% 100%, 0 100%); }
+
+/* ---- summary + edit in place ---- */
+html { overflow-anchor: none; } /* opening the panel must not move the page */
+.summary { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+#summary { flex: 1; min-width: 0; margin: 0; font-size: 14px; line-height: 1.3; overflow-wrap: anywhere; }
+.summary .btn { flex: none; width: auto; margin: 0; }
+#edit-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.22s ease; }
+#edit-panel.open { grid-template-rows: 1fr; }
+.panel-inner { min-height: 0; overflow: hidden; margin: 0 -4px; padding: 0 4px; }
+#edit-panel #inputs { margin-top: 4px; padding-bottom: 16px; }
+.seg + #sky-key { margin-top: 16px; }
 .muted, 
 /* ---- inputs ---- */
 #inputs { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
