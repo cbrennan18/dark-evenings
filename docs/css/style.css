@@ -8,9 +8,6 @@
   --ink: #f1eee8;
   --muted: #8f897f;
   --orange: #ff8c1a;
-  --night: #080808;
-  --twilight: #463f36;
-  --day: #d9ccb4;
   --rule: #363636;
   --map: #1c1c1c;
   --gutter: 16px;
@@ -68,7 +65,6 @@ html { overflow-anchor: none; } /* opening the panel must not move the page */
 .panel-inner { min-height: 0; overflow: hidden; margin: 0 -4px; padding: 0 4px; }
 #edit-panel #inputs { margin-top: 4px; padding-bottom: 16px; }
 .seg + #sky-key { margin-top: 16px; }
-.muted, 
 /* ---- inputs ---- */
 #inputs { margin-top: 20px; display: flex; flex-direction: column; gap: 12px; }
 .lbl { color: var(--muted); font-size: 14px; }

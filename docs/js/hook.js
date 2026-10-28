@@ -1,7 +1,7 @@
 // Hook: Ireland's outline with the evening shadow at 18:00 on the clocks-change
 // weekend. Sat 24 Oct 2026 18:00 IST (17:00 UTC) -> Sun 25 Oct 2026 18:00 GMT
 // (18:00 UTC). Same clock time, an hour later by the sun.
-// Shade: sun below -0.833 deg = twilight, below -6 deg = night.
+// Colour per pixel from the sun's altitude, using the sky calendar's ramp.
 // The slide sweeps the one hour of real time between the two states (not the
 // 25 h between the two instants), then lands exactly on Sunday.
 (function (root) {
@@ -12,7 +12,8 @@
   var SLIDE_MS = 6000;
   var LABELS = ['Sat 24 Oct · 18:00', 'Sun 25 Oct · 18:00'];
   var K = Math.cos(53.4 * Math.PI / 180); // longitude squeeze at Ireland's latitude
-  var CELL = 2;           // css px per shading cell
+  var LATTICE = 6;        // css px between altitude samples; interpolated between
+  var ALT_LO = -7, ALT_HI = 12, ALT_STEP = 0.005; // colour lookup range / resolution (deg)
   var LABEL_H = 56;       // css px reserved under the map for the labels
   var PAD = 12;
 
@@ -33,15 +34,21 @@
   var canvas, geo = null, colors = null, e = 0, labelMode = 'sat'; // 'sat' | 'sun' | 'both'
   var played = false, visible = false, timer = 0, raf = 0;
   var stats = { draw: [], frames: [] };
-  var off = null;
+  var off = null, lut = null;
 
   function css(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-  function rgb(hex) {
-    var n = parseInt(hex.replace('#', ''), 16);
-    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  }
   function reduced() {
     return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  }
+
+  // Packed ABGR (little-endian) colour per altitude step, from the sky ramp.
+  function buildLut() {
+    var n = Math.round((ALT_HI - ALT_LO) / ALT_STEP) + 1;
+    lut = new Uint32Array(n);
+    for (var i = 0; i < n; i++) {
+      var c = root.DE.sky.colour(ALT_LO + i * ALT_STEP);
+      lut[i] = (255 << 24) | (c[2] << 16) | (c[1] << 8) | c[0];
+    }
   }
 
   function layout(cssW, cssH) {
@@ -54,7 +61,7 @@
   function draw() {
     if (!canvas || !geo) return;
     var t0 = performance.now();
-    if (!colors) colors = { day: css('--day'), twilight: css('--twilight'), night: css('--night'), line: css('--muted'), ink: css('--ink'), mute: css('--muted') };
+    if (!colors) colors = { line: css('--muted'), ink: css('--ink'), mute: css('--muted') };
     var dpr = window.devicePixelRatio || 1;
     var cssW = canvas.clientWidth, cssH = canvas.clientHeight;
     var W = Math.round(cssW * dpr), H = Math.round(cssH * dpr);
@@ -80,23 +87,42 @@
     ctx.strokeStyle = colors.line;
     ctx.stroke();
 
-    // Shading: low-res grid over the bounding box, scaled up inside the land clip.
+    // Shading: altitude on a coarse lattice, interpolated to 1 css px, coloured
+    // through a lookup table, then scaled up inside the land clip.
     var b = geo.bbox;
     var tl = px([b[0], b[3]]), br = px([b[2], b[1]]);
     var bw = br[0] - tl[0], bh = br[1] - tl[1];
-    var gw = Math.max(1, Math.ceil(bw / CELL)), gh = Math.max(1, Math.ceil(bh / CELL));
-    if (!off || off.width !== gw || off.height !== gh) {
-      off = document.createElement('canvas'); off.width = gw; off.height = gh;
+    var ow = Math.max(1, Math.ceil(bw)), oh = Math.max(1, Math.ceil(bh));
+    var lw = Math.max(2, Math.ceil(bw / LATTICE) + 1), lh = Math.max(2, Math.ceil(bh / LATTICE) + 1);
+    if (!lut) buildLut();
+    if (!off || off.width !== ow || off.height !== oh) {
+      off = document.createElement('canvas'); off.width = ow; off.height = oh;
     }
-    var octx = off.getContext('2d'), img = octx.createImageData(gw, gh), d = img.data;
-    var pal = [rgb(colors.day), rgb(colors.twilight), rgb(colors.night)];
     var tMs = instant(e), sun = root.DE.sun, pos = sun.solarPos(tMs);
-    for (var j = 0; j < gh; j++) {
-      var lat = L.latC - (tl[1] + (j + 0.5) * bh / gh - L.cy) / L.s;
-      for (var i = 0; i < gw; i++) {
-        var lon = L.lonC + (tl[0] + (i + 0.5) * bw / gw - L.cx) / (K * L.s);
-        var c = pal[shadeClass(sun.altitudeAt(pos, tMs, lat, lon))], o = (j * gw + i) * 4;
-        d[o] = c[0]; d[o + 1] = c[1]; d[o + 2] = c[2]; d[o + 3] = 255;
+    var alts = new Float32Array(lw * lh);
+    for (var k = 0; k < lh; k++) {
+      var lat = L.latC - (tl[1] + k * bh / (lh - 1) - L.cy) / L.s;
+      for (var m = 0; m < lw; m++) {
+        var lon = L.lonC + (tl[0] + m * bw / (lw - 1) - L.cx) / (K * L.s);
+        alts[k * lw + m] = sun.altitudeAt(pos, tMs, lat, lon);
+      }
+    }
+    var octx = off.getContext('2d'), img = octx.createImageData(ow, oh), px32 = new Uint32Array(img.data.buffer);
+    var x0 = new Int32Array(ow), tx = new Float32Array(ow);
+    for (var i = 0; i < ow; i++) {
+      var u = (i + 0.5) / ow * (lw - 1), iu = Math.min(lw - 2, Math.floor(u));
+      x0[i] = iu; tx[i] = u - iu;
+    }
+    var nLut = lut.length - 1, inv = 1 / ALT_STEP;
+    for (var j = 0; j < oh; j++) {
+      var v = (j + 0.5) / oh * (lh - 1), jv = Math.min(lh - 2, Math.floor(v)), ty = v - jv;
+      var r0 = jv * lw, r1 = r0 + lw;
+      for (var q = 0; q < ow; q++) {
+        var c0 = x0[q], f = tx[q];
+        var top = alts[r0 + c0] + (alts[r0 + c0 + 1] - alts[r0 + c0]) * f;
+        var bot = alts[r1 + c0] + (alts[r1 + c0 + 1] - alts[r1 + c0]) * f;
+        var idx = ((top + (bot - top) * ty - ALT_LO) * inv) | 0;
+        px32[j * ow + q] = lut[idx < 0 ? 0 : idx > nLut ? nLut : idx];
       }
     }
     octx.putImageData(img, 0, 0);

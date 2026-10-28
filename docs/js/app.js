@@ -195,6 +195,16 @@
         id: 'pin-work', type: 'circle', source: 'pins', filter: ['==', ['get', 'kind'], 'work'],
         paint: { 'circle-radius': 7, 'circle-color': MAP_BG, 'circle-stroke-color': ORANGE, 'circle-stroke-width': 3 }
       });
+      // Near-invisible symbol under each pin: it takes part in label collision
+      // (labels beneath a pin are hidden) but is always drawn itself.
+      var N = 56, img = new Uint8ClampedArray(N * N * 4);
+      for (var k = 3; k < img.length; k += 4) img[k] = 1;
+      if (!map.hasImage('pin-clear')) map.addImage('pin-clear', { width: N, height: N, data: img }, { pixelRatio: 2 });
+      map.addLayer({
+        id: 'pin-clear', type: 'symbol', source: 'pins',
+        layout: { 'icon-image': 'pin-clear', 'icon-allow-overlap': true, 'icon-ignore-placement': false },
+        paint: { 'icon-opacity': 0.01 }
+      });
       if (lastRoute) setRouteLine(lastRoute);
     });
     map.once('load', function () {

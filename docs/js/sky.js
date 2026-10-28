@@ -19,17 +19,19 @@
   var MUTED = '#8f897f';
   var OUTLINE = 'rgba(255,255,255,0.08)';
 
-  // Real-sky ramp, altitude (deg) to colour. Ascending altitude.
+  // Real-sky ramp, altitude (deg) to colour, ascending. Hard step at -6 deg:
+  // the twilight floor sits just above it, anything counted dark is flat.
   var STOPS = [
-    [-12, '#050508'], [-6, '#0b1020'], [-3, '#2b3352'], [0, '#b06a5a'], [4, '#e3b07a'], [12, '#a9bccd']
+    [-6, '#3a4170'], [-3, '#5a5f8a'], [0, '#b06a5a'], [4, '#e3b07a'], [12, '#a9bccd']
   ].map(function (s) {
     var h = s[1];
     return { alt: s[0], rgb: [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)] };
   });
+  var DARK_RGB = [7, 8, 13]; // #07080d
 
   function colour(alt) {
-    var a = STOPS[0], z = STOPS[STOPS.length - 1];
-    if (!(alt > a.alt)) return a.rgb;
+    if (alt < DARK_DEG) return DARK_RGB;
+    var z = STOPS[STOPS.length - 1];
     if (alt >= z.alt) return z.rgb;
     for (var i = 1; i < STOPS.length; i++) {
       if (alt <= STOPS[i].alt) {
