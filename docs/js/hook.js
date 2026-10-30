@@ -174,17 +174,6 @@
   // Auto-play once, when the data is loaded and the canvas is in view.
   function maybePlay() { if (!played && geo && visible) play(); }
 
-  // Start over from Saturday (user-triggered). No-op under reduced motion.
-  function replay() {
-    if (!geo || reduced()) return;
-    played = true;
-    clearTimeout(timer);
-    cancelAnimationFrame(raf);
-    stats.draw.length = 0; stats.frames.length = 0;
-    e = 0; labelMode = 'sat'; draw();
-    timer = setTimeout(slide, HOLD_MS);
-  }
-
   function init(el) {
     canvas = el;
     var fonts = (document.fonts && document.fonts.load) ? document.fonts.load('500 16px Inter').catch(function () {}) : Promise.resolve();
@@ -201,7 +190,6 @@
   }
 
   api.init = init;
-  api.replay = replay;
   api.progress = function () { return { e: e, label: labelMode, played: played }; };
   api.redraw = function () { if (geo) draw(); };
   api.width = function () { return canvas ? canvas.clientWidth : 0; };

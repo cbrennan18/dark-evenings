@@ -51,6 +51,8 @@ body {
 
 #sky { display: block; width: 100%; margin-top: 8px; }
 #sky-key { margin: 16px 0 0; font-size: 14px; color: var(--muted); }
+#sky-colours { margin: 6px 0 0; font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.sw { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 2px; border: 1px solid var(--rule); vertical-align: -1px; }
 .tri { display: inline-block; width: 10px; height: 10px; background: var(--ink); vertical-align: -1px; }
 .tri.tl { clip-path: polygon(0 0, 100% 0, 0 100%); }
 .tri.br { clip-path: polygon(100% 0, 100% 100%, 0 100%); }
@@ -149,4 +151,3 @@ footer p { margin: 0 0 8px; }
 
 .btn.ghost { background: transparent; color: var(--muted); min-height: 44px; font-weight: 500; }
 .btn.secondary { background: transparent; color: var(--ink); border: 1px solid var(--rule); margin-top: 12px; }
-@media (prefers-reduced-motion: reduce) { #hook-replay { display: none; } }

@@ -120,7 +120,7 @@
     $('n-evening').textContent = c.evenings;
     $('key-m').textContent = clock(o.startMin - o.commuteMin);
     $('key-e').textContent = clock(o.finishMin + o.commuteMin);
-    $('sky').setAttribute('aria-label', 'TODO calendar: ' + c.mornings + ' dark mornings, ' + c.evenings + ' dark evenings');
+    $('sky').setAttribute('aria-label', c.mornings + ' dark mornings and ' + c.evenings + ' dark evenings in the next year.');
     updateSummary();
   }
 
@@ -131,7 +131,7 @@
     p.classList.toggle('open', open);
     if (open) p.removeAttribute('inert'); else p.setAttribute('inert', '');
     b.setAttribute('aria-expanded', open ? 'true' : 'false');
-    b.textContent = open ? 'TODO done' : 'TODO edit';
+    b.textContent = open ? 'Done' : 'Edit commute';
   }
 
   // ---- map ----
@@ -360,7 +360,6 @@
     $('hook-go').addEventListener('click', function () { scrollTo($('entry').hidden ? $('result') : $('entry')); });
     $('find').addEventListener('click', findOut);
     $('demo').addEventListener('click', fillDemo);
-    $('hook-replay').addEventListener('click', function () { DE.hook.replay(); });
 
     // Redraw only when a canvas box really changes size. Safari's address bar
     // changes the viewport height, but the hook is sized in svh, so neither it
